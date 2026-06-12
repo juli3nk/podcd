@@ -1,13 +1,23 @@
 package controller
 
-func (c *Controller) Run() {
-    for {
-        changes := c.Source.Diff()
+import (
+	"context"
+	"log"
+	"time"
+)
 
-        plan := c.Reconciler.Plan(changes)
+func (c *Controller) Run(ctx context.Context) {
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
 
-        c.Reconciler.Apply(plan)
-
-        time.Sleep(30 * time.Second)
-    }
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := c.reconciler.Reconcile(); err != nil {
+				log.Printf("reconcile error: %v", err)
+			}
+		}
+	}
 }

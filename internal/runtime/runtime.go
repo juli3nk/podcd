@@ -8,48 +8,71 @@ import (
 )
 
 type RunSpec struct {
+	Remove bool
+
+	Volumes []model.VolumeRef
+	Devices []string
+
+	Networks []model.NetworkRef
+	DNS      []string
+	Ports    []model.PortSpec
+
+	Env map[string]string
+
+	Labels map[string]string
+
+	Name string
+
 	Image string
 
 	Command []string
 	Args    []string
-
-	Env map[string]string
-
-	Volumes  []model.VolumeRef
-	Networks []model.NetworkRef
-
-	Remove bool
-	Name   string
 }
 
 type Runtime interface {
-	Run(spec RunSpec) error
+	ListNetworks(filter Labels) ([]NetworkInfo, error)
+	CreateNetwork(net model.Network, hash string) error
+	RemoveNetwork(name string) error
 
-	CreateVolume(vol model.Volume) error
-	CreateNetwork(net model.Network) error
+	ListVolumes(filter Labels) ([]VolumeInfo, error)
+	CreateVolume(vol model.Volume, hash string) error
+	RemoveVolume(name string) error
+
+	ListSecrets(filter Labels) ([]SecretInfo, error)
+	CreateSecret(secret model.Secret, data []byte) error
+	RemoveSecret(name string) error
+
+	ListContainers(filter Labels) ([]ContainerInfo, error)
+	Run(spec RunSpec, hash string) error
 }
 
-func New(rt model.RuntimeType) (Runtime, error) {
+func New(rt Backend) (Runtime, error) {
 	switch rt {
-	case model.RuntimeDocker:
-		return &DockerRuntime{}, nil
-	case model.RuntimePodman:
+	case BackendDocker:
+		return &DockerRuntime{
+			basePath: "",
+		}, nil
+	case BackendPodman:
 		return &PodmanRuntime{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported runtime: %s", rt)
 	}
 }
 
-func DetectRuntime() (model.RuntimeType, error) {
-	if _, err := exec.LookPath("podman"); err == nil {
-		return model.RuntimePodman, nil
+func DetectRuntime() (Backend, error) {
+	if _, err := exec.LookPath(dockerExec); err == nil {
+		return BackendDocker, nil
 	}
 
-	if _, err := exec.LookPath("docker"); err == nil {
-		return model.RuntimeDocker, nil
+	if _, err := exec.LookPath(podmanExec); err == nil {
+		return BackendPodman, nil
 	}
 
 	return "", fmt.Errorf("no supported runtime found")
+}
+
+func (b Backend) BinaryPath() (string, error) {
+	return exec.LookPath(string(b))
 }
 
 func FromContainer(spec model.ContainerSpec) RunSpec {
@@ -60,4 +83,25 @@ func FromContainer(spec model.ContainerSpec) RunSpec {
 		Volumes:  spec.Volumes,
 		Networks: spec.Networks,
 	}
+}
+
+func safeLabels(labels Labels) Labels {
+	if labels == nil {
+		return Labels{}
+	}
+	return labels
+}
+
+func managedLabels(name, hash string, labels map[string]string) map[string]string {
+	result := make(map[string]string)
+
+	for k, v := range labels {
+		result[k] = v
+	}
+
+	result[string(LabelManaged)] = "true"
+	result[string(LabelName)] = name
+	result[string(LabelSpecHash)] = hash
+
+	return result
 }

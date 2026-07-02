@@ -24,11 +24,7 @@ type SecretRef struct {
 }
 
 type ContainerSpec struct {
-	Name    string
-	Runtime RuntimeType
-
-	Image   string
-	Command []string
+	Remove bool
 
 	Volumes []VolumeRef
 	Devices []string
@@ -40,7 +36,15 @@ type ContainerSpec struct {
 	Env     map[string]string
 	Secrets []SecretRef
 
-	AddCapabilities []string
+	AddCapabilities  []string
+	DropCapabilities []string
+
+	Labels map[string]string
+
+	Name string
+
+	Image   string
+	Command []string
 
 	Metadata Metadata
 }

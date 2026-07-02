@@ -2,21 +2,27 @@ package controller
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"time"
 )
 
-func (c *Controller) Run(ctx context.Context) {
-	ticker := time.NewTicker(10 * time.Second)
+func (c *Controller) Run(ctx context.Context) error {
+	interval, err := time.ParseDuration(c.interval)
+	if err != nil {
+		return err
+	}
+
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			return
+			return nil
 		case <-ticker.C:
 			if err := c.reconciler.Reconcile(); err != nil {
-				log.Printf("reconcile error: %v", err)
+				fmt.Printf("%+v", err)
+				return err
 			}
 		}
 	}

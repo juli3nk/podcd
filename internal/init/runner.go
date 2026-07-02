@@ -2,6 +2,7 @@ package initrunner
 
 import (
 	"github.com/juli3nk/podcd/internal/model"
+	"github.com/juli3nk/podcd/internal/normalize"
 	"github.com/juli3nk/podcd/internal/runtime"
 	"github.com/juli3nk/podcd/internal/state"
 )
@@ -16,7 +17,7 @@ type Runner struct {
 	state   state.Store
 }
 
-func New(rt model.RuntimeType, state state.Store) (InitRunner, error) {
+func New(rt runtime.Backend, state state.Store) (InitRunner, error) {
 	rtImpl, err := runtime.New(rt)
 	if err != nil {
 		return nil, err
@@ -37,14 +38,17 @@ func (r *Runner) AlreadyDone(task model.InitTask) bool {
 
 func (r *Runner) Run(task model.InitTask) error {
 	spec := runtime.RunSpec{
-		Image:    task.Image,
-		Command:  task.Command,
-		Env:      task.Env,
+		Remove:   true,
 		Volumes:  task.Volumes,
 		Networks: task.Networks,
+		Env:      task.Env,
+		Image:    task.Image,
+		Command:  task.Command,
 	}
 
-	err := r.runtime.Run(spec)
+	hash := normalize.HashContainer(task.ToContainer())
+
+	err := r.runtime.Run(spec, hash)
 	if err != nil {
 		return err
 	}

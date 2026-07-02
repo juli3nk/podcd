@@ -6,10 +6,12 @@ import (
 
 type Controller struct {
 	reconciler *reconcile.Reconciler
+	interval   string
 }
 
-func New(reconciler *reconcile.Reconciler) *Controller {
+func New(reconciler *reconcile.Reconciler, interval string) *Controller {
 	return &Controller{
 		reconciler: reconciler,
+		interval:   interval,
 	}
 }

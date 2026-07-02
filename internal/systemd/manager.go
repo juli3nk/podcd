@@ -2,10 +2,16 @@ package systemd
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
+
+	"github.com/juli3nk/go-utils/filedir"
 )
 
 type Manager interface {
+	UnitPath() string
+
 	Reload() error
 
 	Enable(name string) error
@@ -22,8 +28,27 @@ type Systemd struct {
 	UserMode bool
 }
 
-func New(userMode bool) Manager {
-	return &Systemd{UserMode: userMode}
+func New(userMode bool) (Manager, error) {
+	systemd := &Systemd{UserMode: userMode}
+
+	unitPath := systemd.UnitPath()
+
+	if err := filedir.CreateDirIfNotExist(unitPath, true, 0750); err != nil {
+		return nil, err
+	}
+
+	return systemd, nil
+}
+
+func (s *Systemd) UnitPath() string {
+	if s.UserMode {
+		return filepath.Join(
+			os.Getenv("HOME"),
+			".config/systemd/user",
+		)
+	}
+
+	return "/etc/systemd/system"
 }
 
 func (s *Systemd) Reload() error {

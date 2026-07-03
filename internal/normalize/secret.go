@@ -18,9 +18,8 @@ type normalizedSecret struct {
 
 func normalizeSecret(v model.Secret) normalizedSecret {
 	return normalizedSecret{
-		Name:          v.Name,
-		EncryptedData: normalizeMap(v.EncryptedData),
-		Labels:        normalizeMap(v.Labels),
+		Name:   v.Name,
+		Labels: normalizeMap(v.Labels),
 	}
 }
 

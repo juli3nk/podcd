@@ -3,7 +3,7 @@ package model
 type Secret struct {
 	Name string
 
-	EncryptedData map[string]string
+	Filepath string
 
 	Labels   map[string]string
 	Metadata Metadata

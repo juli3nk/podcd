@@ -4,6 +4,7 @@ import (
 	initrunner "github.com/juli3nk/podcd/internal/init"
 	"github.com/juli3nk/podcd/internal/renderer"
 	"github.com/juli3nk/podcd/internal/runtime"
+	"github.com/juli3nk/podcd/internal/secret"
 	"github.com/juli3nk/podcd/internal/source"
 	"github.com/juli3nk/podcd/internal/systemd"
 )
@@ -29,7 +30,8 @@ type NetworkReconciler struct {
 }
 
 type SecretReconciler struct {
-	runtime runtime.Runtime
+	decrypter secret.Decrypter
+	runtime   runtime.Runtime
 }
 
 type VolumeReconciler struct {
@@ -47,6 +49,7 @@ type Reconciler struct {
 
 func New(
 	src source.Source,
+	decrypter secret.Decrypter,
 	renderer renderer.Renderer,
 	systemd systemd.Manager,
 	runtime runtime.Runtime,
@@ -64,7 +67,8 @@ func New(
 			runtime: runtime,
 		},
 		secrets: &SecretReconciler{
-			runtime: runtime,
+			decrypter: decrypter,
+			runtime:   runtime,
 		},
 		volumes: &VolumeReconciler{
 			runtime: runtime,

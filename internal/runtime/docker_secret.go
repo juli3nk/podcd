@@ -34,7 +34,7 @@ func (r *DockerRuntime) ListSecrets(filter Labels) ([]SecretInfo, error) {
 	return result, nil
 }
 
-func (r *DockerRuntime) CreateSecret(secret model.Secret, data []byte) error {
+func (r *DockerRuntime) CreateSecret(secret model.Secret, data []byte, hash string) error {
 	if err := os.MkdirAll(r.basePath, 0700); err != nil {
 		return err
 	}

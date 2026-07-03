@@ -39,7 +39,7 @@ type Runtime interface {
 	RemoveVolume(name string) error
 
 	ListSecrets(filter Labels) ([]SecretInfo, error)
-	CreateSecret(secret model.Secret, data []byte) error
+	CreateSecret(secret model.Secret, data []byte, hash string) error
 	RemoveSecret(name string) error
 
 	ListContainers(filter Labels) ([]ContainerInfo, error)

@@ -71,6 +71,7 @@ func loadFromGit(basePath string) (model.RootSpec, error) {
 		case string(ResourceSecret):
 			var s model.Secret
 			yaml.Unmarshal(data, &s)
+			s.Filepath = file
 			result.Secrets = append(result.Secrets, s)
 		case string(ResourceContainer):
 			var c model.Container

@@ -7,6 +7,7 @@ import (
 
 	"github.com/juli3nk/podcd/internal/model"
 	"github.com/juli3nk/podcd/internal/normalize"
+	"github.com/juli3nk/podcd/internal/secret"
 )
 
 func (r *Reconciler) Reconcile() error {
@@ -151,11 +152,16 @@ func (r *SecretReconciler) Reconcile(
 		d, dExists := desiredMap[name]
 		a, aExists := actual[name]
 
+		secretData, err := secret.LoadSecretData(d.Filepath, r.decrypter)
+		if err != nil {
+			return err
+		}
+
 		desiredHash := normalize.HashSecret(d)
 
 		switch {
 		case !aExists && dExists:
-			if err := r.runtime.CreateSecret(d, desiredHash); err != nil {
+			if err := r.runtime.CreateSecret(d, secretData, desiredHash); err != nil {
 				return err
 			}
 
@@ -172,7 +178,7 @@ func (r *SecretReconciler) Reconcile(
 				if err := r.runtime.RemoveSecret(name); err != nil {
 					return err
 				}
-				if err := r.runtime.CreateSecret(d, desiredHash); err != nil {
+				if err := r.runtime.CreateSecret(d, secretData, desiredHash); err != nil {
 					return err
 				}
 			}

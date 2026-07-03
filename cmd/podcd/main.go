@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/juli3nk/podcd/internal/reconcile"
 	"github.com/juli3nk/podcd/internal/renderer"
 	"github.com/juli3nk/podcd/internal/runtime"
+	"github.com/juli3nk/podcd/internal/secret"
 	"github.com/juli3nk/podcd/internal/source"
 	"github.com/juli3nk/podcd/internal/state"
 	"github.com/juli3nk/podcd/internal/systemd"
@@ -81,6 +83,9 @@ func main() {
 		log.Fatal().Err(err).Msg("source init")
 	}
 
+	// Decrypter
+	decrypter := secret.NewSOPSDecrypter(filepath.Join(paths.IdentityDir, "age", "keys.txt"))
+
 	// 2. Runtime
 	runtimeBackend, err := runtime.DetectRuntime()
 	if err != nil {
@@ -122,6 +127,7 @@ func main() {
 	// 8. Reconciler
 	reconciler := reconcile.New(
 		src,
+		decrypter,
 		rend,
 		sysd,
 		rt,

@@ -5,10 +5,9 @@ import (
 )
 
 type DockerRuntime struct {
-	basePath string
+	binaryPath string
+	basePath   string
 }
-
-var dockerExec string = "docker"
 
 func dockerInspect(id string, args ...string) ([]byte, error) {
 	cmdArgs := append(args, "inspect", id)

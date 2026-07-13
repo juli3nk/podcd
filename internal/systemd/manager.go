@@ -26,10 +26,20 @@ type Manager interface {
 
 type Systemd struct {
 	UserMode bool
+
+	cliPath string
 }
 
 func New(userMode bool) (Manager, error) {
-	systemd := &Systemd{UserMode: userMode}
+	binaryPath, err := exec.LookPath("systemctl")
+	if err != nil {
+		return nil, err
+	}
+
+	systemd := &Systemd{
+		UserMode: userMode,
+		cliPath:  binaryPath,
+	}
 
 	unitPath := systemd.UnitPath()
 
@@ -92,7 +102,7 @@ func (s *Systemd) run(args ...string) error {
 
 	finalArgs = append(finalArgs, args...)
 
-	cmd := exec.Command("systemctl", finalArgs...)
+	cmd := exec.Command(s.cliPath, finalArgs...)
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {

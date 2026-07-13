@@ -4,9 +4,9 @@ import (
 	"os/exec"
 )
 
-type PodmanRuntime struct{}
-
-var podmanExec string = "podman"
+type PodmanRuntime struct {
+	binaryPath string
+}
 
 func podmanInspect(id string, args ...string) ([]byte, error) {
 	cmdArgs := append(args, "inspect", id)

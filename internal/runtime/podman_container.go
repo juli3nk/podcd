@@ -7,14 +7,14 @@ import (
 	"strings"
 )
 
-func (d *PodmanRuntime) ListContainers(filter Labels) ([]ContainerInfo, error) {
+func (r *PodmanRuntime) ListContainers(filter Labels) ([]ContainerInfo, error) {
 	args := []string{"container", "ls", "-a", "--format", "{{.ID}}"}
 
 	for k, v := range filter {
 		args = append(args, "--filter", fmt.Sprintf("label=%s=%s", k, v))
 	}
 
-	out, err := exec.Command(podmanExec, args...).Output()
+	out, err := exec.Command(r.binaryPath, args...).Output()
 	if err != nil {
 		return nil, err
 	}
@@ -22,7 +22,7 @@ func (d *PodmanRuntime) ListContainers(filter Labels) ([]ContainerInfo, error) {
 	var result []ContainerInfo
 
 	for _, id := range strings.Fields(string(out)) {
-		info, err := d.inspectContainer(id)
+		info, err := r.inspectContainer(id)
 		if err != nil {
 			return nil, err
 		}
@@ -32,7 +32,7 @@ func (d *PodmanRuntime) ListContainers(filter Labels) ([]ContainerInfo, error) {
 	return result, nil
 }
 
-func (d *PodmanRuntime) Run(spec RunSpec, hash string) error {
+func (r *PodmanRuntime) Run(spec RunSpec, hash string) error {
 	args := []string{"run"}
 
 	if spec.Remove {
@@ -67,10 +67,10 @@ func (d *PodmanRuntime) Run(spec RunSpec, hash string) error {
 		args = append(args, spec.Args...)
 	}
 
-	return exec.Command(podmanExec, args...).Run()
+	return exec.Command(r.binaryPath, args...).Run()
 }
 
-func (d *PodmanRuntime) inspectContainer(id string) (ContainerInfo, error) {
+func (r *PodmanRuntime) inspectContainer(id string) (ContainerInfo, error) {
 	var info ContainerInfo
 
 	out, err := podmanInspect(id, "container")

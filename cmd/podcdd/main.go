@@ -2,17 +2,10 @@ package main
 
 import (
 	"github.com/juli3nk/go-utils"
-	"github.com/juli3nk/podcd/internal/config"
-	"github.com/juli3nk/podcd/internal/ipc"
 )
 
 func main() {
-	userMode := config.IsUserMode()
-	paths := config.DefaultPaths(userMode)
-
-	client := ipc.NewClient(paths.Socket)
-
-	cmd := newCommand(client)
+	cmd := newCommand()
 
 	cmd.SetHelpTemplate(helpTemplate)
 	cmd.SetUsageTemplate(usageTemplate)

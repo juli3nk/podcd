@@ -9,7 +9,7 @@ import (
 	"github.com/juli3nk/podcd/internal/model"
 )
 
-func (d *DockerRuntime) ListNetworks(filter Labels) ([]NetworkInfo, error) {
+func (r *DockerRuntime) ListNetworks(filter Labels) ([]NetworkInfo, error) {
 	var result []NetworkInfo
 
 	args := []string{"network", "ls", "--format", "{{.ID}}"}
@@ -18,7 +18,7 @@ func (d *DockerRuntime) ListNetworks(filter Labels) ([]NetworkInfo, error) {
 		args = append(args, "--filter", fmt.Sprintf("label=%s=%s", k, v))
 	}
 
-	out, err := exec.Command(dockerExec, args...).Output()
+	out, err := exec.Command(r.binaryPath, args...).Output()
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func (d *DockerRuntime) ListNetworks(filter Labels) ([]NetworkInfo, error) {
 	ids := strings.Fields(string(out))
 
 	for _, id := range ids {
-		info, err := d.inspectNetwork(id)
+		info, err := r.inspectNetwork(id)
 		if err != nil {
 			return nil, err
 		}
@@ -36,7 +36,7 @@ func (d *DockerRuntime) ListNetworks(filter Labels) ([]NetworkInfo, error) {
 	return result, nil
 }
 
-func (d *DockerRuntime) CreateNetwork(net model.Network, hash string) error {
+func (r *DockerRuntime) CreateNetwork(net model.Network, hash string) error {
 	args := []string{"network", "create"}
 
 	if net.Driver != "" {
@@ -70,18 +70,18 @@ func (d *DockerRuntime) CreateNetwork(net model.Network, hash string) error {
 
 	args = append(args, net.Name)
 
-	return exec.Command(dockerExec, args...).Run()
+	return exec.Command(r.binaryPath, args...).Run()
 }
 
-func (d *DockerRuntime) RemoveNetwork(name string) error {
+func (r *DockerRuntime) RemoveNetwork(name string) error {
 	args := []string{"network", "remove"}
 
 	args = append(args, name)
 
-	return exec.Command(dockerExec, args...).Run()
+	return exec.Command(r.binaryPath, args...).Run()
 }
 
-func (d *DockerRuntime) inspectNetwork(id string) (NetworkInfo, error) {
+func (r *DockerRuntime) inspectNetwork(id string) (NetworkInfo, error) {
 	var info NetworkInfo
 
 	out, err := dockerInspect(id, "network")

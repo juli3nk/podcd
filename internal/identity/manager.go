@@ -12,7 +12,7 @@ type IdentityManager struct {
 	basePath string
 }
 
-func New(basePath string) *IdentityManager {
+func New(basePath string) Manager {
 	return &IdentityManager{
 		basePath: basePath,
 	}

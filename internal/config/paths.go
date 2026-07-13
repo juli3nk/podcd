@@ -12,6 +12,8 @@ type Paths struct {
 
 	IdentityDir string
 	SecretsDir  string
+
+	Socket string
 }
 
 func DefaultPaths(userMode bool) Paths {
@@ -30,12 +32,19 @@ func DefaultPaths(userMode bool) Paths {
 			dataDir = filepath.Join(home, ".local", "share")
 		}
 
+		runtimeDir := os.Getenv("XDG_RUNTIME_DIR")
+		if runtimeDir == "" {
+			uid := ""
+			runtimeDir = filepath.Join("/run", "user", uid)
+		}
+
 		return Paths{
 			Config:      filepath.Join(configDir, appName, "config.yaml"),
 			State:       filepath.Join(dataDir, appName, "state.json"),
 			Workspace:   filepath.Join(dataDir, appName, "gitops-repo"),
 			IdentityDir: filepath.Join(configDir, appName, "identity"),
 			SecretsDir:  filepath.Join(dataDir, appName, "secrets"),
+			Socket:      filepath.Join(runtimeDir, appName, "podcd.sock"),
 		}
 	}
 
@@ -45,12 +54,14 @@ func DefaultPaths(userMode bool) Paths {
 		Workspace:   filepath.Join("/var/lib", appName, "gitops-repo"),
 		IdentityDir: filepath.Join("/etc", appName, "identity"),
 		SecretsDir:  filepath.Join("/run", appName, "secrets"),
+		Socket:      filepath.Join("/run", appName, "podcd.sock"),
 	}
 }
 
 func EnsureDirectories(paths Paths) error {
 	dirs := []string{
 		filepath.Dir(paths.Config),
+		filepath.Dir(paths.Socket),
 		filepath.Dir(paths.State),
 		paths.Workspace,
 		paths.IdentityDir,

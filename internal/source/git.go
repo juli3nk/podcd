@@ -13,9 +13,16 @@ type GitSource struct {
 	path    string
 
 	lastRevision string
+
+	binaryPath string
 }
 
 func NewGit(repoURL, branch, path string) (*GitSource, error) {
+	binaryPath, err := exec.LookPath("systemctl")
+	if err != nil {
+		return nil, err
+	}
+
 	if err := os.MkdirAll(path, 0755); err != nil {
 		return nil, err
 	}
@@ -24,6 +31,8 @@ func NewGit(repoURL, branch, path string) (*GitSource, error) {
 		repoURL: repoURL,
 		branch:  branch,
 		path:    path,
+
+		binaryPath: binaryPath,
 	}
 
 	if _, err := os.Stat(filepath.Join(path, ".git")); os.IsNotExist(err) {
@@ -51,8 +60,10 @@ func (g *GitSource) Fetch() error {
 
 func (g *GitSource) Diff() ([]Change, error) {
 	cmd := exec.Command(
-		"git", "-C", g.path,
-		"diff", "--name-status",
+		g.binaryPath,
+		"-C", g.path,
+		"diff",
+		"--name-status",
 		g.lastRevision, "HEAD",
 	)
 
@@ -87,17 +98,32 @@ func (g *GitSource) Revision() string {
 }
 
 func (g *GitSource) clone() error {
-	cmd := exec.Command("git", "clone", "-b", g.branch, g.repoURL, g.path)
+	cmd := exec.Command(
+		g.binaryPath,
+		"clone",
+		"-b", g.branch,
+		g.repoURL,
+		g.path,
+	)
 	return cmd.Run()
 }
 
 func (g *GitSource) pull() error {
-	cmd := exec.Command("git", "-C", g.path, "pull")
+	cmd := exec.Command(
+		g.binaryPath,
+		"-C", g.path,
+		"pull",
+	)
 	return cmd.Run()
 }
 
 func (g *GitSource) getRevision() (string, error) {
-	cmd := exec.Command("git", "-C", g.path, "rev-parse", "HEAD")
+	cmd := exec.Command(
+		g.binaryPath,
+		"-C", g.path,
+		"rev-parse",
+		"HEAD",
+	)
 	out, err := cmd.Output()
 	if err != nil {
 		return "", err

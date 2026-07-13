@@ -7,14 +7,14 @@ import (
 	"strings"
 )
 
-func (d *DockerRuntime) ListContainers(filter Labels) ([]ContainerInfo, error) {
+func (r *DockerRuntime) ListContainers(filter Labels) ([]ContainerInfo, error) {
 	args := []string{"container", "ls", "-a", "--format", "{{.ID}}"}
 
 	for k, v := range filter {
 		args = append(args, "--filter", fmt.Sprintf("label=%s=%s", k, v))
 	}
 
-	out, err := exec.Command(dockerExec, args...).Output()
+	out, err := exec.Command(r.binaryPath, args...).Output()
 	if err != nil {
 		return nil, err
 	}
@@ -22,7 +22,7 @@ func (d *DockerRuntime) ListContainers(filter Labels) ([]ContainerInfo, error) {
 	var result []ContainerInfo
 
 	for _, id := range strings.Fields(string(out)) {
-		info, err := d.inspectContainer(id)
+		info, err := r.inspectContainer(id)
 		if err != nil {
 			return nil, err
 		}
@@ -32,13 +32,13 @@ func (d *DockerRuntime) ListContainers(filter Labels) ([]ContainerInfo, error) {
 	return result, nil
 }
 
-func (d *DockerRuntime) Run(spec RunSpec, hash string) error {
+func (r *DockerRuntime) Run(spec RunSpec, hash string) error {
 	args := BuildDockerContainerRunArgs(spec, hash)
 
-	return exec.Command(dockerExec, args...).Run()
+	return exec.Command(r.binaryPath, args...).Run()
 }
 
-func (d *DockerRuntime) inspectContainer(id string) (ContainerInfo, error) {
+func (r *DockerRuntime) inspectContainer(id string) (ContainerInfo, error) {
 	var info ContainerInfo
 
 	out, err := dockerInspect(id, "container")

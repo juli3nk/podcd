@@ -7,6 +7,11 @@ const (
 	BackendPodman Backend = "podman"
 )
 
+var (
+	dockerExec string = "docker"
+	podmanExec string = "podman"
+)
+
 func (rt Backend) IsValid() bool {
 	switch rt {
 	case BackendDocker, BackendPodman:

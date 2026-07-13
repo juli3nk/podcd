@@ -152,7 +152,7 @@ func (r *SecretReconciler) Reconcile(
 		d, dExists := desiredMap[name]
 		a, aExists := actual[name]
 
-		secretData, err := secret.LoadSecretData(d.Filepath, r.decrypter)
+		secretData, err := r.secretData(d)
 		if err != nil {
 			return err
 		}
@@ -186,6 +186,29 @@ func (r *SecretReconciler) Reconcile(
 	}
 
 	return nil
+}
+
+func (r *SecretReconciler) secretData(
+	s model.Secret,
+) ([]byte, error) {
+	switch {
+	case s.Filepath != "":
+		return secret.LoadSecretData(
+			s.Filepath,
+			r.decrypter,
+		)
+
+	case s.Generator != nil:
+		return r.generator.Generate(
+			*s.Generator,
+		)
+
+	default:
+		return nil, fmt.Errorf(
+			"secret %q: neither filepath nor generator defined",
+			s.Name,
+		)
+	}
 }
 
 func (r *ContainerReconciler) Reconcile(

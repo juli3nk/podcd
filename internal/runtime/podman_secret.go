@@ -9,7 +9,7 @@ import (
 	"github.com/juli3nk/podcd/internal/model"
 )
 
-func (d *PodmanRuntime) ListSecrets(filter Labels) ([]SecretInfo, error) {
+func (r *PodmanRuntime) ListSecrets(filter Labels) ([]SecretInfo, error) {
 	var result []SecretInfo
 
 	args := []string{"secret", "ls", "--format", "{{.Name}}"}
@@ -18,7 +18,7 @@ func (d *PodmanRuntime) ListSecrets(filter Labels) ([]SecretInfo, error) {
 		args = append(args, "--filter", fmt.Sprintf("label=%s=%s", k, v))
 	}
 
-	out, err := exec.Command(podmanExec, args...).Output()
+	out, err := exec.Command(r.binaryPath, args...).Output()
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func (d *PodmanRuntime) ListSecrets(filter Labels) ([]SecretInfo, error) {
 	names := strings.Fields(string(out))
 
 	for _, name := range names {
-		info, err := d.inspectVolume(name)
+		info, err := r.inspectVolume(name)
 		if err != nil {
 			return nil, err
 		}
@@ -46,7 +46,7 @@ func (r *PodmanRuntime) CreateSecret(secret model.Secret, data []byte, hash stri
 
 	args = append(args, secret.Name, "-")
 
-	cmd := exec.Command(podmanExec, args...)
+	cmd := exec.Command(r.binaryPath, args...)
 	cmd.Stdin = bytes.NewReader(data)
 
 	return cmd.Run()
@@ -57,5 +57,5 @@ func (r *PodmanRuntime) RemoveSecret(name string) error {
 
 	args = append(args, name)
 
-	return exec.Command(podmanExec, args...).Run()
+	return exec.Command(r.binaryPath, args...).Run()
 }

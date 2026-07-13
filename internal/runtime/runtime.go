@@ -49,11 +49,24 @@ type Runtime interface {
 func New(rt Backend) (Runtime, error) {
 	switch rt {
 	case BackendDocker:
+		binaryPath, err := rt.BinaryPath()
+		if err != nil {
+			return nil, err
+		}
+
 		return &DockerRuntime{
-			basePath: "",
+			binaryPath: binaryPath,
+			basePath:   "",
 		}, nil
 	case BackendPodman:
-		return &PodmanRuntime{}, nil
+		binaryPath, err := rt.BinaryPath()
+		if err != nil {
+			return nil, err
+		}
+
+		return &PodmanRuntime{
+			binaryPath: binaryPath,
+		}, nil
 	default:
 		return nil, fmt.Errorf("unsupported runtime: %s", rt)
 	}

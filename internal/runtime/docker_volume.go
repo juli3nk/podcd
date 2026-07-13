@@ -9,7 +9,7 @@ import (
 	"github.com/juli3nk/podcd/internal/model"
 )
 
-func (d *DockerRuntime) ListVolumes(filter Labels) ([]VolumeInfo, error) {
+func (r *DockerRuntime) ListVolumes(filter Labels) ([]VolumeInfo, error) {
 	var result []VolumeInfo
 
 	args := []string{"volume", "ls", "--format", "{{.Name}}"}
@@ -18,7 +18,7 @@ func (d *DockerRuntime) ListVolumes(filter Labels) ([]VolumeInfo, error) {
 		args = append(args, "--filter", fmt.Sprintf("label=%s=%s", k, v))
 	}
 
-	out, err := exec.Command(dockerExec, args...).Output()
+	out, err := exec.Command(r.binaryPath, args...).Output()
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func (d *DockerRuntime) ListVolumes(filter Labels) ([]VolumeInfo, error) {
 	names := strings.Fields(string(out))
 
 	for _, name := range names {
-		info, err := d.inspectVolume(name)
+		info, err := r.inspectVolume(name)
 		if err != nil {
 			return nil, err
 		}
@@ -36,7 +36,7 @@ func (d *DockerRuntime) ListVolumes(filter Labels) ([]VolumeInfo, error) {
 	return result, nil
 }
 
-func (d *DockerRuntime) CreateVolume(vol model.Volume, hash string) error {
+func (r *DockerRuntime) CreateVolume(vol model.Volume, hash string) error {
 	args := []string{"volume", "create"}
 
 	if vol.Driver != "" {
@@ -54,18 +54,18 @@ func (d *DockerRuntime) CreateVolume(vol model.Volume, hash string) error {
 
 	args = append(args, vol.Name)
 
-	return exec.Command("docker", args...).Run()
+	return exec.Command(r.binaryPath, args...).Run()
 }
 
-func (d *DockerRuntime) RemoveVolume(name string) error {
+func (r *DockerRuntime) RemoveVolume(name string) error {
 	args := []string{"volume", "remove"}
 
 	args = append(args, name)
 
-	return exec.Command(dockerExec, args...).Run()
+	return exec.Command(r.binaryPath, args...).Run()
 }
 
-func (d *DockerRuntime) inspectVolume(name string) (VolumeInfo, error) {
+func (r *DockerRuntime) inspectVolume(name string) (VolumeInfo, error) {
 	var info VolumeInfo
 
 	out, err := dockerInspect(name, "volume")

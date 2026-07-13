@@ -1,6 +1,7 @@
 package reconcile
 
 import (
+	"github.com/juli3nk/podcd/internal/generator"
 	initrunner "github.com/juli3nk/podcd/internal/init"
 	"github.com/juli3nk/podcd/internal/renderer"
 	"github.com/juli3nk/podcd/internal/runtime"
@@ -19,10 +20,10 @@ const (
 )
 
 type ContainerReconciler struct {
-	systemd  systemd.Manager
-	renderer renderer.Renderer
 	runtime  runtime.Runtime
 	init     initrunner.InitRunner
+	systemd  systemd.Manager
+	renderer renderer.Renderer
 }
 
 type NetworkReconciler struct {
@@ -30,8 +31,9 @@ type NetworkReconciler struct {
 }
 
 type SecretReconciler struct {
-	decrypter secret.Decrypter
 	runtime   runtime.Runtime
+	decrypter secret.Decrypter
+	generator generator.Generator
 }
 
 type VolumeReconciler struct {

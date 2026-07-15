@@ -89,7 +89,7 @@ func runDaemon(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("detect runtime")
 	}
 
-	rt, err := runtime.New(runtimeBackend)
+	rt, err := runtime.New(runtimeBackend, paths.RuntimeStorageDir)
 	if err != nil {
 		log.Fatal().Err(err).Msg("runtime init")
 	}
@@ -116,7 +116,7 @@ func runDaemon(cmd *cobra.Command, args []string) {
 	}
 
 	// 7. Init runner
-	initRunner, err := initrunner.New(runtimeBackend, store)
+	initRunner, err := initrunner.New(runtimeBackend, paths.RuntimeStorageDir, store)
 	if err != nil {
 		log.Fatal().Err(err).Msg("init runner")
 	}

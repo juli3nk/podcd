@@ -10,8 +10,8 @@ type Paths struct {
 	State     string
 	Workspace string
 
-	IdentityDir string
-	SecretsDir  string
+	IdentityDir       string
+	RuntimeStorageDir string
 
 	Socket string
 }
@@ -39,22 +39,22 @@ func DefaultPaths(userMode bool) Paths {
 		}
 
 		return Paths{
-			Config:      filepath.Join(configDir, appName, "config.yaml"),
-			State:       filepath.Join(dataDir, appName, "state.json"),
-			Workspace:   filepath.Join(dataDir, appName, "gitops-repo"),
-			IdentityDir: filepath.Join(configDir, appName, "identity"),
-			SecretsDir:  filepath.Join(dataDir, appName, "secrets"),
-			Socket:      filepath.Join(runtimeDir, appName, "podcd.sock"),
+			Config:            filepath.Join(configDir, appName, "config.yaml"),
+			State:             filepath.Join(dataDir, appName, "state.json"),
+			Workspace:         filepath.Join(dataDir, appName, "gitops-repo"),
+			IdentityDir:       filepath.Join(configDir, appName, "identity"),
+			RuntimeStorageDir: filepath.Join(dataDir, appName, "runtime"),
+			Socket:            filepath.Join(runtimeDir, appName, "podcd.sock"),
 		}
 	}
 
 	return Paths{
-		Config:      filepath.Join("/etc", appName, "config.yaml"),
-		State:       filepath.Join("/var/lib", appName, "state.json"),
-		Workspace:   filepath.Join("/var/lib", appName, "gitops-repo"),
-		IdentityDir: filepath.Join("/etc", appName, "identity"),
-		SecretsDir:  filepath.Join("/run", appName, "secrets"),
-		Socket:      filepath.Join("/run", appName, "podcd.sock"),
+		Config:            filepath.Join("/etc", appName, "config.yaml"),
+		State:             filepath.Join("/var/lib", appName, "state.json"),
+		Workspace:         filepath.Join("/var/lib", appName, "gitops-repo"),
+		IdentityDir:       filepath.Join("/etc", appName, "identity"),
+		RuntimeStorageDir: filepath.Join("/run", appName, "runtime"),
+		Socket:            filepath.Join("/run", appName, "podcd.sock"),
 	}
 }
 
@@ -65,7 +65,7 @@ func EnsureDirectories(paths Paths) error {
 		filepath.Dir(paths.State),
 		paths.Workspace,
 		paths.IdentityDir,
-		paths.SecretsDir,
+		paths.RuntimeStorageDir,
 	}
 
 	for _, dir := range dirs {

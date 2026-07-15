@@ -19,11 +19,22 @@ type PortSpec struct {
 	Protocol      string
 }
 
-type SecretRef struct {
-	Name string
+type FileRef struct {
+	Name   string
+	Target string
 }
 
-type ContainerSpec struct {
+type ContainerStatus struct {
+	LastAppliedHash string
+	Ready           bool
+}
+
+type Container struct {
+	Name   string
+	Labels map[string]string
+
+	Init []InitTask
+
 	Remove bool
 
 	Volumes []VolumeRef
@@ -33,30 +44,16 @@ type ContainerSpec struct {
 	DNS      []string
 	Ports    []PortSpec
 
-	Env     map[string]string
-	Secrets []SecretRef
+	Env        map[string]string
+	ConfigMaps []FileRef
+	Secrets    []FileRef
 
 	AddCapabilities  []string
 	DropCapabilities []string
 
-	Labels map[string]string
-
-	Name string
-
 	Image   string
 	Command []string
+	Args    []string
 
-	Metadata Metadata
-}
-
-type ContainerStatus struct {
-	LastAppliedHash string
-	Ready           bool
-}
-
-type Container struct {
-	Init []InitTask
-
-	Spec   ContainerSpec
 	Status ContainerStatus
 }

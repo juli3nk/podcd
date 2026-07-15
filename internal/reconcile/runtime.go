@@ -8,6 +8,7 @@ type RuntimeObject struct {
 }
 
 type RuntimeState struct {
+	ConfigMaps map[string]RuntimeObject
 	Containers map[string]RuntimeObject
 	Networks   map[string]RuntimeObject
 	Secrets    map[string]RuntimeObject
@@ -17,10 +18,24 @@ type RuntimeState struct {
 func (r *Reconciler) discoverFromRuntime() (RuntimeState, error) {
 	var state RuntimeState
 
+	state.ConfigMaps = make(map[string]RuntimeObject)
 	state.Containers = make(map[string]RuntimeObject)
 	state.Networks = make(map[string]RuntimeObject)
 	state.Secrets = make(map[string]RuntimeObject)
 	state.Volumes = make(map[string]RuntimeObject)
+
+	// ConfigMaps
+	configMaps, err := r.containers.runtime.ListConfigMaps(runtime.Labels{runtime.LabelManaged: "true"})
+	if err != nil {
+		return state, err
+	}
+	for _, n := range configMaps {
+		name := n.Name
+		state.ConfigMaps[name] = RuntimeObject{
+			Name: name,
+			Hash: n.Labels[runtime.LabelResourceHash],
+		}
+	}
 
 	// Containers
 	containers, err := r.containers.runtime.ListContainers(runtime.Labels{runtime.LabelManaged: "true"})
@@ -31,7 +46,7 @@ func (r *Reconciler) discoverFromRuntime() (RuntimeState, error) {
 		name := c.Labels[runtime.LabelName]
 		state.Containers[name] = RuntimeObject{
 			Name: name,
-			Hash: c.Labels[runtime.LabelSpecHash],
+			Hash: c.Labels[runtime.LabelResourceHash],
 		}
 	}
 
@@ -44,7 +59,7 @@ func (r *Reconciler) discoverFromRuntime() (RuntimeState, error) {
 		name := n.Name
 		state.Networks[name] = RuntimeObject{
 			Name: name,
-			Hash: n.Labels[runtime.LabelSpecHash],
+			Hash: n.Labels[runtime.LabelResourceHash],
 		}
 	}
 
@@ -57,7 +72,7 @@ func (r *Reconciler) discoverFromRuntime() (RuntimeState, error) {
 		name := n.Name
 		state.Secrets[name] = RuntimeObject{
 			Name: name,
-			Hash: n.Labels[runtime.LabelSpecHash],
+			Hash: n.Labels[runtime.LabelResourceHash],
 		}
 	}
 
@@ -70,7 +85,7 @@ func (r *Reconciler) discoverFromRuntime() (RuntimeState, error) {
 		name := v.Name
 		state.Volumes[name] = RuntimeObject{
 			Name: name,
-			Hash: v.Labels[runtime.LabelSpecHash],
+			Hash: v.Labels[runtime.LabelResourceHash],
 		}
 	}
 

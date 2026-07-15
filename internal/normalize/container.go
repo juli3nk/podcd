@@ -5,7 +5,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sort"
+	"strings"
 
 	"github.com/juli3nk/podcd/internal/model"
 )
@@ -23,8 +25,9 @@ type normalizedContainer struct {
 	DNS      []string
 	Ports    []model.PortSpec
 
-	Env     []string
-	Secrets []model.SecretRef
+	Env        []string
+	ConfigMaps []model.FileRef
+	Secrets    []model.FileRef
 
 	AddCapabilities  []string
 	DropCapabilities []string
@@ -81,7 +84,21 @@ func sortNetworks(n []model.NetworkRef) []model.NetworkRef {
 	return out
 }
 
-func normalizeContainer(spec model.ContainerSpec) normalizedContainer {
+func normalizeFiles(files []model.FileRef) []model.FileRef {
+	result := slices.Clone(files)
+
+	slices.SortFunc(result, func(a, b model.FileRef) int {
+		if a.Name != b.Name {
+			return strings.Compare(a.Name, b.Name)
+		}
+
+		return strings.Compare(a.Target, b.Target)
+	})
+
+	return result
+}
+
+func normalizeContainer(spec model.Container) normalizedContainer {
 	return normalizedContainer{
 		Name: spec.Name,
 
@@ -95,14 +112,16 @@ func normalizeContainer(spec model.ContainerSpec) normalizedContainer {
 		DNS:      sortStrings(spec.DNS),
 		Ports:    sortPorts(spec.Ports),
 
-		Env: normalizeEnv(spec.Env),
+		Env:        normalizeEnv(spec.Env),
+		ConfigMaps: normalizeFiles(spec.ConfigMaps),
+		Secrets:    normalizeFiles(spec.Secrets),
 
 		AddCapabilities:  sortStrings(spec.AddCapabilities),
 		DropCapabilities: sortStrings(spec.DropCapabilities),
 	}
 }
 
-func HashContainer(m model.ContainerSpec) string {
+func HashContainer(m model.Container) string {
 	n := normalizeContainer(m)
 
 	data, _ := json.Marshal(n)

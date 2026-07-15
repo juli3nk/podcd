@@ -13,11 +13,16 @@ import (
 type ResourceType string
 
 const (
-	ResourceContainer ResourceType = "container"
-	ResourceNetwork   ResourceType = "network"
-	ResourceSecret    ResourceType = "secret"
-	ResourceVolume    ResourceType = "volume"
+	ConfigMapContainer ResourceType = "configMap"
+	ResourceContainer  ResourceType = "container"
+	ResourceNetwork    ResourceType = "network"
+	ResourceSecret     ResourceType = "secret"
+	ResourceVolume     ResourceType = "volume"
 )
+
+type ConfigMapReconciler struct {
+	runtime runtime.Runtime
+}
 
 type ContainerReconciler struct {
 	runtime  runtime.Runtime
@@ -43,6 +48,7 @@ type VolumeReconciler struct {
 type Reconciler struct {
 	source source.Source
 
+	configMaps *ConfigMapReconciler
 	containers *ContainerReconciler
 	networks   *NetworkReconciler
 	secrets    *SecretReconciler
@@ -59,6 +65,9 @@ func New(
 ) *Reconciler {
 	return &Reconciler{
 		source: src,
+		configMaps: &ConfigMapReconciler{
+			runtime: runtime,
+		},
 		containers: &ContainerReconciler{
 			systemd:  systemd,
 			renderer: renderer,

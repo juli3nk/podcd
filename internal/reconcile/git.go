@@ -57,7 +57,6 @@ func loadFromGit(basePath string) (model.RootSpec, error) {
 		if err := yaml.Unmarshal(data, &meta); err != nil {
 			return result, err
 		}
-		fmt.Println(meta)
 
 		switch strings.ToLower(meta.Kind) {
 		case string(ResourceNetwork):

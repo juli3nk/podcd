@@ -5,8 +5,7 @@ import (
 )
 
 type DockerRuntime struct {
-	binaryPath string
-	basePath   string
+	RuntimeBase
 }
 
 func dockerInspect(id string, args ...string) ([]byte, error) {

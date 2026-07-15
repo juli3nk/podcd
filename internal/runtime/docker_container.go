@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"github.com/juli3nk/podcd/internal/model"
 )
 
 func (r *DockerRuntime) ListContainers(filter Labels) ([]ContainerInfo, error) {
@@ -32,7 +34,7 @@ func (r *DockerRuntime) ListContainers(filter Labels) ([]ContainerInfo, error) {
 	return result, nil
 }
 
-func (r *DockerRuntime) Run(spec RunSpec, hash string) error {
+func (r *DockerRuntime) Run(spec model.Container, hash string) error {
 	args := BuildDockerContainerRunArgs(spec, hash)
 
 	return exec.Command(r.binaryPath, args...).Run()
@@ -69,7 +71,7 @@ func (r *DockerRuntime) inspectContainer(id string) (ContainerInfo, error) {
 	return info, nil
 }
 
-func BuildDockerContainerRunArgs(spec RunSpec, hash string) []string {
+func BuildDockerContainerRunArgs(spec model.Container, hash string) []string {
 	args := []string{"container", "run"}
 
 	if spec.Remove {
@@ -98,6 +100,14 @@ func BuildDockerContainerRunArgs(spec RunSpec, hash string) []string {
 
 	for k, v := range spec.Env {
 		args = append(args, fmt.Sprintf("--env %s=%s", k, v))
+	}
+
+	for _, cm := range spec.ConfigMaps {
+		args = append(args, "--mount", fmt.Sprintf("type=tmpfs,src=%s,dst=%s,ro", cm.Name, cm.Target))
+	}
+
+	for _, s := range spec.Secrets {
+		args = append(args, "--mount", fmt.Sprintf("type=tmpfs,src=%s,dst=%s,ro", s.Name, s.Target))
 	}
 
 	labels := managedLabels(spec.Name, hash, spec.Labels)

@@ -3,30 +3,14 @@ package runtime
 import (
 	"fmt"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/juli3nk/podcd/internal/model"
 )
 
-type RunSpec struct {
-	Remove bool
-
-	Volumes []model.VolumeRef
-	Devices []string
-
-	Networks []model.NetworkRef
-	DNS      []string
-	Ports    []model.PortSpec
-
-	Env map[string]string
-
-	Labels map[string]string
-
-	Name string
-
-	Image string
-
-	Command []string
-	Args    []string
+type RuntimeBase struct {
+	binaryPath string
+	storageDir string
 }
 
 type Runtime interface {
@@ -38,15 +22,19 @@ type Runtime interface {
 	CreateVolume(vol model.Volume, hash string) error
 	RemoveVolume(name string) error
 
+	ListConfigMaps(filter Labels) ([]ConfigMapInfo, error)
+	CreateConfigMap(configMap model.ConfigMap, hash string) error
+	RemoveConfigMap(name string) error
+
 	ListSecrets(filter Labels) ([]SecretInfo, error)
 	CreateSecret(secret model.Secret, data []byte, hash string) error
 	RemoveSecret(name string) error
 
 	ListContainers(filter Labels) ([]ContainerInfo, error)
-	Run(spec RunSpec, hash string) error
+	Run(spec model.Container, hash string) error
 }
 
-func New(rt Backend) (Runtime, error) {
+func New(rt Backend, storageDir string) (Runtime, error) {
 	switch rt {
 	case BackendDocker:
 		binaryPath, err := rt.BinaryPath()
@@ -55,8 +43,10 @@ func New(rt Backend) (Runtime, error) {
 		}
 
 		return &DockerRuntime{
-			binaryPath: binaryPath,
-			basePath:   "",
+			RuntimeBase: RuntimeBase{
+				binaryPath: binaryPath,
+				storageDir: storageDir,
+			},
 		}, nil
 	case BackendPodman:
 		binaryPath, err := rt.BinaryPath()
@@ -65,7 +55,10 @@ func New(rt Backend) (Runtime, error) {
 		}
 
 		return &PodmanRuntime{
-			binaryPath: binaryPath,
+			RuntimeBase: RuntimeBase{
+				binaryPath: binaryPath,
+				storageDir: storageDir,
+			},
 		}, nil
 	default:
 		return nil, fmt.Errorf("unsupported runtime: %s", rt)
@@ -88,14 +81,32 @@ func (b Backend) BinaryPath() (string, error) {
 	return exec.LookPath(string(b))
 }
 
-func FromContainer(spec model.ContainerSpec) RunSpec {
-	return RunSpec{
-		Image:    spec.Image,
-		Command:  spec.Command,
-		Env:      spec.Env,
-		Volumes:  spec.Volumes,
-		Networks: spec.Networks,
-	}
+func (r *RuntimeBase) secretDir() string {
+	return filepath.Join(
+		r.storageDir,
+		"secrets",
+	)
+}
+
+func (r *RuntimeBase) secretPath(name string) string {
+	return filepath.Join(
+		r.secretDir(),
+		name,
+	)
+}
+
+func (r *RuntimeBase) configMapDir() string {
+	return filepath.Join(
+		r.storageDir,
+		"configmaps",
+	)
+}
+
+func (r *RuntimeBase) configMapPath(name string) string {
+	return filepath.Join(
+		r.configMapDir(),
+		name,
+	)
 }
 
 func safeLabels(labels Labels) Labels {
@@ -114,7 +125,7 @@ func managedLabels(name, hash string, labels map[string]string) map[string]strin
 
 	result[string(LabelManaged)] = "true"
 	result[string(LabelName)] = name
-	result[string(LabelSpecHash)] = hash
+	result[string(LabelResourceHash)] = hash
 
 	return result
 }

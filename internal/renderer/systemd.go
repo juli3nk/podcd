@@ -29,7 +29,7 @@ ExecStopPost={{ .BinaryPath }} container rm {{ .Name }}
 WantedBy=multi-user.target
 `
 
-func (r *SystemdRenderer) Render(spec model.ContainerSpec, hash string) ([]Unit, error) {
+func (r *SystemdRenderer) Render(spec model.Container, hash string) ([]Unit, error) {
 	data := struct {
 		Backend     string
 		BinaryPath  string
@@ -59,40 +59,14 @@ func (r *SystemdRenderer) Render(spec model.ContainerSpec, hash string) ([]Unit,
 	return []Unit{unit}, nil
 }
 
-func (r *SystemdRenderer) buildRunCommand(spec model.ContainerSpec, hash string) string {
+func (r *SystemdRenderer) buildRunCommand(spec model.Container, hash string) string {
 	switch r.backend {
 	case runtime.BackendDocker:
-		runtimeSpec := runtime.RunSpec{
-			Remove:   spec.Remove,
-			Volumes:  spec.Volumes,
-			Devices:  spec.Devices,
-			Networks: spec.Networks,
-			DNS:      spec.DNS,
-			Ports:    spec.Ports,
-			Env:      spec.Env,
-			Labels:   spec.Labels,
-			Name:     spec.Name,
-			Image:    spec.Image,
-			Command:  spec.Command,
-		}
-		args := runtime.BuildDockerContainerRunArgs(runtimeSpec, hash)
+		args := runtime.BuildDockerContainerRunArgs(spec, hash)
 		return strings.Join(args, " ")
 
 	case runtime.BackendPodman:
-		runtimeSpec := runtime.RunSpec{
-			Remove:   spec.Remove,
-			Volumes:  spec.Volumes,
-			Devices:  spec.Devices,
-			Networks: spec.Networks,
-			DNS:      spec.DNS,
-			Ports:    spec.Ports,
-			Env:      spec.Env,
-			Labels:   spec.Labels,
-			Name:     spec.Name,
-			Image:    spec.Image,
-			Command:  spec.Command,
-		}
-		args := runtime.BuildDockerContainerRunArgs(runtimeSpec, hash)
+		args := runtime.BuildDockerContainerRunArgs(spec, hash)
 		return strings.Join(args, " ")
 
 	default:

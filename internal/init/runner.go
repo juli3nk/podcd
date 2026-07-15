@@ -17,8 +17,8 @@ type Runner struct {
 	state   state.Store
 }
 
-func New(rt runtime.Backend, state state.Store) (InitRunner, error) {
-	rtImpl, err := runtime.New(rt)
+func New(rt runtime.Backend, storageDir string, state state.Store) (InitRunner, error) {
+	rtImpl, err := runtime.New(rt, storageDir)
 	if err != nil {
 		return nil, err
 	}
@@ -37,26 +37,16 @@ func (r *Runner) AlreadyDone(task model.InitTask) bool {
 }
 
 func (r *Runner) Run(task model.InitTask) error {
-	spec := runtime.RunSpec{
-		Remove:   true,
-		Volumes:  task.Volumes,
-		Networks: task.Networks,
-		Env:      task.Env,
-		Image:    task.Image,
-		Command:  task.Command,
-	}
+	hash := normalize.HashInitTask(task)
 
-	hash := normalize.HashContainer(task.ToContainer())
+	spec := task.ToContainer()
 
-	err := r.runtime.Run(spec, hash)
-	if err != nil {
+	if err := r.runtime.Run(spec, hash); err != nil {
 		return err
 	}
 
 	if task.Once {
-		if err := r.state.MarkDone(task.Name); err != nil {
-			return err
-		}
+		return r.state.MarkDone(task.Name)
 	}
 
 	return nil

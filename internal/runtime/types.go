@@ -24,9 +24,9 @@ func (rt Backend) IsValid() bool {
 type LabelType string
 
 const (
-	LabelManaged  LabelType = "podcd.io/managed"
-	LabelName     LabelType = "podcd.io/name"
-	LabelSpecHash LabelType = "podcd.io/spec-hash"
+	LabelManaged      LabelType = "podcd.io/managed"
+	LabelName         LabelType = "podcd.io/name"
+	LabelResourceHash LabelType = "podcd.io/resource-hash"
 )
 
 type Labels map[LabelType]string
@@ -36,6 +36,7 @@ type ResourceInfo struct {
 	Labels Labels
 }
 
+type ConfigMapInfo = ResourceInfo
 type ContainerInfo = ResourceInfo
 type NetworkInfo = ResourceInfo
 type SecretInfo = ResourceInfo

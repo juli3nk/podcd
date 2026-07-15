@@ -5,7 +5,7 @@ import (
 )
 
 type PodmanRuntime struct {
-	binaryPath string
+	RuntimeBase
 }
 
 func podmanInspect(id string, args ...string) ([]byte, error) {

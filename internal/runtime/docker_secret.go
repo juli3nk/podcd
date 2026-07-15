@@ -11,7 +11,7 @@ import (
 func (r *DockerRuntime) ListSecrets(filter Labels) ([]SecretInfo, error) {
 	var result []SecretInfo
 
-	entries, err := os.ReadDir(r.basePath)
+	entries, err := os.ReadDir(r.secretDir())
 	if err != nil {
 		return nil, err
 	}
@@ -22,7 +22,7 @@ func (r *DockerRuntime) ListSecrets(filter Labels) ([]SecretInfo, error) {
 		}
 
 		labels, err := r.loadSecretLabels(
-			filepath.Join(r.basePath, entry.Name()),
+			r.secretPath(entry.Name()),
 		)
 		if err != nil {
 			return nil, err
@@ -35,11 +35,11 @@ func (r *DockerRuntime) ListSecrets(filter Labels) ([]SecretInfo, error) {
 }
 
 func (r *DockerRuntime) CreateSecret(secret model.Secret, data []byte, hash string) error {
-	if err := os.MkdirAll(r.basePath, 0700); err != nil {
+	if err := os.MkdirAll(r.secretDir(), 0700); err != nil {
 		return err
 	}
 
-	path := filepath.Join(r.basePath, secret.Name)
+	path := r.secretPath(secret.Name)
 
 	return os.WriteFile(
 		path,
@@ -49,7 +49,7 @@ func (r *DockerRuntime) CreateSecret(secret model.Secret, data []byte, hash stri
 }
 
 func (r *DockerRuntime) RemoveSecret(name string) error {
-	path := filepath.Join(r.basePath, name)
+	path := r.secretPath(name)
 
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return err

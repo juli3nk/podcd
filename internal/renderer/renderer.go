@@ -11,7 +11,7 @@ type Unit struct {
 }
 
 type Renderer interface {
-	Render(spec model.ContainerSpec, hash string) ([]Unit, error)
+	Render(spec model.Container, hash string) ([]Unit, error)
 }
 
 func New(rt runtime.Backend) (Renderer, error) {

@@ -16,6 +16,5 @@ type Secret struct {
 	Filepath  string
 	Generator *SecretGenerator
 
-	Labels   map[string]string
-	Metadata Metadata
+	Labels map[string]string
 }

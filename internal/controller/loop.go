@@ -21,8 +21,8 @@ func (c *Controller) Run(ctx context.Context) error {
 			return nil
 		case <-ticker.C:
 			if err := c.reconciler.Reconcile(); err != nil {
-				fmt.Printf("%+v", err)
-				return err
+				fmt.Printf("reconciliation error: %+v\n", err)
+				continue
 			}
 		}
 	}

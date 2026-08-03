@@ -33,7 +33,7 @@ func (r *Runner) AlreadyDone(task model.InitTask) bool {
 	if !task.Once {
 		return false
 	}
-	return r.state.IsDone(task.Name)
+	return r.state.IsDone(normalize.HashInitTask(task))
 }
 
 func (r *Runner) Run(task model.InitTask) error {
@@ -46,7 +46,7 @@ func (r *Runner) Run(task model.InitTask) error {
 	}
 
 	if task.Once {
-		return r.state.MarkDone(task.Name)
+		return r.state.MarkDone(hash)
 	}
 
 	return nil

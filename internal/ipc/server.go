@@ -1,10 +1,13 @@
 package ipc
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"os"
+	"sync"
 )
 
 type HandlerFunc func(Request) Response
@@ -14,6 +17,7 @@ type Server struct {
 	handler    HandlerFunc
 
 	listener net.Listener
+	wg       sync.WaitGroup
 }
 
 func NewServer(
@@ -24,6 +28,28 @@ func NewServer(
 		socketPath: socketPath,
 		handler:    handler,
 	}
+}
+
+func (s *Server) Run(ctx context.Context) error {
+    done := make(chan struct{})
+
+    go func() {
+        select {
+        case <-ctx.Done():
+            _ = s.Close()
+        case <-done:
+        }
+    }()
+
+    defer close(done)
+
+    err := s.Start()
+
+    if errors.Is(err, net.ErrClosed) {
+        return nil
+    }
+
+    return err
 }
 
 func (s *Server) Start() error {
@@ -50,7 +76,12 @@ func (s *Server) Start() error {
 			return err
 		}
 
-		go s.handleConnection(conn)
+		s.wg.Add(1)
+
+		go func() {
+			defer s.wg.Done()
+			s.handleConnection(conn)
+		}()
 	}
 }
 
@@ -59,7 +90,11 @@ func (s *Server) Close() error {
 		return nil
 	}
 
-	return s.listener.Close()
+	err := s.listener.Close()
+
+	s.wg.Wait()
+
+	return err
 }
 
 func (s *Server) handleConnection(conn net.Conn) {
